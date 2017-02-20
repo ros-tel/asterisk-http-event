@@ -1,8 +1,8 @@
 package main
 
 /*
-   same => n,Agi(agi://localhost:4580/incoming)
-   same => n,Agi(agi://localhost:4580/outgoing)
+   same => n,Agi(agi://127.0.0.1:4580/incoming)
+   same => n,Agi(agi://127.0.0.1:4580/outgoing)
 */
 
 import (
@@ -143,18 +143,18 @@ func handleFastAgiConnection(client net.Conn) {
 		log.Printf("Template Execute error: %+v\n", err)
 		return
 	}
-
+	writer.Flush()
+	if err != nil {
+		log.Printf("Writer Flush error: %+v\n", err)
+		return
+	}
 	go func() {
 		str, _ := buf.ReadString(0)
 		err = cl.request(str)
-		log.Printf("Error request: %+v\n", err)
+		if err != nil {
+			log.Printf("Error request: %+v\n", err)
+		}
 	}()
-
-	rep, err = myAgi.Noop("AgentNumber: %s , CallerNumber: %s, CalledNumber: %s", agentNumber, callerNumber, calledNumber)
-	if err != nil || rep.Res == -1 {
-		log.Printf("Failed NoOp: %+v\n", err)
-		return
-	}
 }
 
 func (cl *apiClient) request(url string) error {
