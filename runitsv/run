@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+
+exec /opt/asterisk-http-event/asterisk-http-event -config=/opt/asterisk-http-event/config/config.yml -debug=false
