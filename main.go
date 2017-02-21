@@ -9,7 +9,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/url"
 	"os"
 	"text/template"
 	"time"
@@ -212,28 +211,4 @@ func getConfig(configFile string) {
 		//log.Fatalf("Content: %v", yamlBytes)
 		log.Fatalf("Could not parse %q: %v", configFile, err)
 	}
-}
-
-/*
-func getConfig(file_path string) {
-	f, err := os.Open(file_path)
-	if err != nil {
-		log.Fatal("error:", err)
-		return
-	}
-	defer f.Close()
-
-	decoder := json.NewDecoder(f)
-	err = decoder.Decode(&config)
-	if err != nil {
-		log.Fatal("error:", err)
-	}
-}
-*/
-
-// Parse AGI reguest return path and query params
-func parseAgiReq(request string) (string, url.Values) {
-	req, _ := url.Parse(request)
-	query, _ := url.ParseQuery(req.RawQuery)
-	return req.Path, query
 }
