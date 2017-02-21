@@ -1,10 +1,5 @@
 package main
 
-/*
-   same => n,Agi(agi://127.0.0.1:4580/incoming)
-   same => n,Agi(agi://127.0.0.1:4580/outgoing)
-*/
-
 import (
 	"bufio"
 	"bytes"
@@ -123,22 +118,42 @@ func handleFastAgiConnection(client net.Conn) {
 		return
 	}
 
-	agentNumber, ok := myAgi.Env["AgentNumber"]
-	if !ok && *debug {
-		log.Printf("Get AgentNumber error: %+v\n", err)
+	var callVars TVars
+
+	rep, err = myAgi.GetVariable("AgentNumber")
+	if err != nil {
+		if *debug {
+			log.Printf("Get AgentNumber error: %+v %+v\n", err, rep)
+		}
+	} else {
+		callVars.AgentNumber = rep.Dat
 	}
-	callerNumber, ok := myAgi.Env["CallerNumber"]
-	if !ok && *debug {
-		log.Printf("Get CallerNumber error: %+v\n", err)
+
+	rep, err = myAgi.GetVariable("CallerNumber")
+	if err != nil {
+		if *debug {
+			log.Printf("Get CallerNumber error: %+v\n", err)
+		}
+	} else {
+		callVars.CallerNumber = rep.Dat
 	}
-	calledNumber, ok := myAgi.Env["CalledNumber"]
-	if !ok && *debug {
-		log.Printf("Get CalledNumber error: %+v\n", err)
+
+	rep, err = myAgi.GetVariable("CalledNumber")
+	if err != nil {
+		if *debug {
+			log.Printf("Get CalledNumber error: %+v\n", err)
+		}
+	} else {
+		callVars.CalledNumber = rep.Dat
+	}
+
+	if *debug {
+		log.Printf("Call Vars: %+v\n", callVars)
 	}
 
 	var buf bytes.Buffer
 	writer := bufio.NewWriter(&buf)
-	err = tpl.Execute(writer, TVars{AgentNumber: agentNumber, CallerNumber: callerNumber, CalledNumber: calledNumber})
+	err = tpl.Execute(writer, callVars)
 	if err != nil {
 		log.Printf("Template Execute error: %+v\n", err)
 		return
