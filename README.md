@@ -11,7 +11,7 @@ exten => _XXX,1,NoOp(Call ${CALLERID(number)} to ${EXTEN})
     same => n,Hangup()
 ```
 
-Пример Sub для вызова на
+Пример Sub для обработки входящих
 ```
 [sub-operator-answer]
 exten => s,1,MSet(AgentNumber=${CUT(CUT(CHANNEL(Name),\-,1),/,2)},CallerNumber=${CONNECTEDLINE(number)})
@@ -26,7 +26,7 @@ exten => s,1,MSet(AgentNumber=${CUT(CUT(CHANNEL(Name),\-,1),/,2)},CallerNumber=$
 ...
 ```
 
-Для Dial с несколькими назначениями также невозможно заранее сказать кто именно ответит,
+Для Dial (с несколькими назначениями) невозможно заранее определить кто ответит,
 поэтому переменные выставляются через Sub
 ```
 ...
