@@ -9,6 +9,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"text/template"
 	"time"
@@ -37,9 +38,9 @@ type (
 )
 
 var (
-	err    error
 	config *TConfig
-	cl     *apiClient
+
+	reqString = make(chan string, 100)
 
 	config_file = flag.String("config", "", "Usage: directory <config_file>")
 	debug       = flag.Bool("debug", false, "Print debug information on stderr")
@@ -55,16 +56,7 @@ func main() {
 
 	getConfig(*config_file)
 
-	cl = &apiClient{
-		c: &http.Client{
-			Timeout: 20 * time.Second,
-			Transport: &http.Transport{
-				IdleConnTimeout:     30 * time.Second,
-				DisableKeepAlives:   false,
-				MaxIdleConnsPerHost: 5,
-			},
-		},
-	}
+	go reqBackground()
 
 	fagiserv, err := net.Listen("tcp", config.FastAgiListen.Host+":"+config.FastAgiListen.Port)
 	if fagiserv == nil {
@@ -86,9 +78,10 @@ func main() {
 func handleFastAgiConnection(client net.Conn) {
 	defer client.Close()
 
+	var err error
 	myAgi := agi.New()
 	rw := bufio.NewReadWriter(bufio.NewReader(client), bufio.NewWriter(client))
-	err := myAgi.Init(rw)
+	err = myAgi.Init(rw)
 	if err != nil {
 		log.Printf("Error Init: %+v\n", err)
 		return
@@ -125,7 +118,7 @@ func handleFastAgiConnection(client net.Conn) {
 			log.Printf("Get AgentNumber error: %+v %+v\n", err, rep)
 		}
 	} else {
-		callVars.AgentNumber = rep.Dat
+		callVars.AgentNumber = url.QueryEscape(rep.Dat)
 	}
 
 	rep, err = myAgi.GetVariable("CallerNumber")
@@ -134,7 +127,7 @@ func handleFastAgiConnection(client net.Conn) {
 			log.Printf("Get CallerNumber error: %+v\n", err)
 		}
 	} else {
-		callVars.CallerNumber = rep.Dat
+		callVars.CallerNumber = url.QueryEscape(rep.Dat)
 	}
 
 	rep, err = myAgi.GetVariable("CalledNumber")
@@ -143,7 +136,7 @@ func handleFastAgiConnection(client net.Conn) {
 			log.Printf("Get CalledNumber error: %+v\n", err)
 		}
 	} else {
-		callVars.CalledNumber = rep.Dat
+		callVars.CalledNumber = url.QueryEscape(rep.Dat)
 	}
 
 	if *debug {
@@ -162,32 +155,52 @@ func handleFastAgiConnection(client net.Conn) {
 		log.Printf("Writer Flush error: %+v\n", err)
 		return
 	}
-	go func() {
-		str, _ := buf.ReadString(0)
-		err = cl.request(str)
-		if err != nil {
-			log.Printf("Error request: %+v\n", err)
-		}
-	}()
+
+	str, err := buf.ReadString(0)
+	if err != nil {
+		log.Printf("Error ReadString: %+v\n", err)
+		return
+	}
+	reqString <- str
 }
 
-func (cl *apiClient) request(url string) error {
+func (cl *apiClient) request(url string) {
 	if *debug {
 		log.Printf("URL: %+v\n", url)
 	}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		log.Printf("Error request: %+v\n", err)
+		return
 	}
 	resp, err := cl.c.Do(req)
 	if err != nil {
-		return err
+		log.Printf("Error request: %+v\n", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	io.Copy(ioutil.Discard, resp.Body)
+}
 
-	return nil
+func reqBackground() {
+	cl := &apiClient{
+		c: &http.Client{
+			Timeout: 20 * time.Second,
+			Transport: &http.Transport{
+				IdleConnTimeout:     30 * time.Second,
+				DisableKeepAlives:   false,
+				MaxIdleConnsPerHost: 5,
+			},
+		},
+	}
+
+	for {
+		select {
+		case str := <-reqString:
+			go cl.request(str)
+		}
+	}
 }
 
 // Load the YAML config file
