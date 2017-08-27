@@ -150,7 +150,7 @@ func handleFastAgiConnection(client net.Conn) {
 		log.Printf("Template Execute error: %+v\n", err)
 		return
 	}
-	writer.Flush()
+	err = writer.Flush()
 	if err != nil {
 		log.Printf("Writer Flush error: %+v\n", err)
 		return
