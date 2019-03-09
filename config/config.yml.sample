@@ -1,3 +1,29 @@
 fast_agi_listen:
     host: '127.0.0.1'
     port: '4580'
+
+amocrm:
+    # Ваш аккаунт - поддомен
+    base_url: https://mycompany.amocrm.ru
+    # Откуда тянем записи
+    record_url: https://192.168.0.80/monitor
+    # Логин пользователя. В качестве логина в системе используется e-mail
+    login: sovsem@pesem.net
+    # Ключ пользователя, который можно получить на странице редактирования профиля пользователя
+    api_key: z2Ks2rMSOVoFZV3l8gbgdVwoVADntScngwCbXFlG
+    # Создавать контакт
+    create_contact: true
+    # Создавать сделку (должно быть активно создание контакта)
+    create_lead: true
+    # Соответствие внутреннего номера и идентификатора пользователя в AmoCRM
+    number_to_user:
+        101: 2374623
+        102: 4379348
+
+database:
+    driver: mysql
+    host: 127.0.0.1
+    port: 3306
+    dbname: asteriskcdrdb
+    user: user
+    password: passwd
