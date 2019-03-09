@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"bytes"
 	"flag"
 	"io"
 	"io/ioutil"
@@ -11,8 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"text/template"
-	"time"
 
 	"github.com/zaf/agi"
 	"gopkg.in/yaml.v2"
@@ -24,6 +21,8 @@ type (
 			Host string `yaml:"host"`
 			Port string `yaml:"port"`
 		} `yaml:"fast_agi_listen"`
+
+		AmoCRM amoCRM `yaml:"amocrm"`
 	}
 
 	TVars struct {
@@ -40,13 +39,15 @@ type (
 var (
 	config *TConfig
 
-	reqString = make(chan string, 100)
+	events = make(chan TVars, 100)
 
 	config_file = flag.String("config", "", "Usage: directory <config_file>")
 	debug       = flag.Bool("debug", false, "Print debug information on stderr")
 )
 
 func main() {
+	log.SetFlags(log.Lshortfile)
+
 	flag.Parse()
 
 	// Load the configuration file
@@ -55,6 +56,8 @@ func main() {
 	}
 
 	getConfig(*config_file)
+
+	go processAuth()
 
 	go reqBackground()
 
@@ -96,20 +99,6 @@ func handleFastAgiConnection(client net.Conn) {
 		}
 	}
 
-	network_script, ok := myAgi.Env["network_script"]
-	if !ok {
-		if *debug {
-			log.Println("No variable network_script, exiting")
-		}
-		return
-	}
-
-	tpl, err := template.ParseFiles("template" + string(os.PathSeparator) + network_script + ".tpl")
-	if err != nil {
-		log.Printf("Template ParseFiles error: %+v\n", err)
-		return
-	}
-
 	var callVars TVars
 
 	rep, err = myAgi.GetVariable("AgentNumber")
@@ -143,64 +132,7 @@ func handleFastAgiConnection(client net.Conn) {
 		log.Printf("Call Vars: %+v\n", callVars)
 	}
 
-	var buf bytes.Buffer
-	writer := bufio.NewWriter(&buf)
-	err = tpl.Execute(writer, callVars)
-	if err != nil {
-		log.Printf("Template Execute error: %+v\n", err)
-		return
-	}
-	err = writer.Flush()
-	if err != nil {
-		log.Printf("Writer Flush error: %+v\n", err)
-		return
-	}
-
-	str, err := buf.ReadString(0)
-	if err != nil {
-		log.Printf("Error ReadString: %+v\n", err)
-		return
-	}
-	reqString <- str
-}
-
-func (cl *apiClient) request(url string) {
-	if *debug {
-		log.Printf("URL: %+v\n", url)
-	}
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Printf("Error request: %+v\n", err)
-		return
-	}
-	resp, err := cl.c.Do(req)
-	if err != nil {
-		log.Printf("Error request: %+v\n", err)
-		return
-	}
-	defer resp.Body.Close()
-
-	io.Copy(ioutil.Discard, resp.Body)
-}
-
-func reqBackground() {
-	cl := &apiClient{
-		c: &http.Client{
-			Timeout: 20 * time.Second,
-			Transport: &http.Transport{
-				IdleConnTimeout:     30 * time.Second,
-				DisableKeepAlives:   false,
-				MaxIdleConnsPerHost: 5,
-			},
-		},
-	}
-
-	for {
-		select {
-		case str := <-reqString:
-			go cl.request(str)
-		}
-	}
+	events <- callVars
 }
 
 // Load the YAML config file
