@@ -1,0 +1,22 @@
+[Unit]
+Description=Asterisk http event
+After=network.target
+
+[Service]
+User=asterisk
+Group=asterisk
+; PermissionsStartOnly=yes
+Environment=HOME=/opt/asterisk-http-event
+WorkingDirectory=/opt/asterisk-http-event
+; ExecStartPre=
+; ExecStart=/opt/asterisk-http-event/asterisk-http-event -config=/opt/asterisk-http-event/config/config.yml -debug
+ExecStart=/opt/asterisk-http-event/asterisk-http-event -config=/opt/asterisk-http-event/config/config.yml
+; ExecStop=
+; ExecReload=
+Restart=always
+RestartSec=5
+StartLimitInterval=500
+StartLimitBurst=100
+
+[Install]
+WantedBy=multi-user.target
