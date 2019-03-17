@@ -328,21 +328,26 @@ func (cl *apiClient) amoCrmContactAdd(contact amoCrmCallsAdd) {
 		log.Printf("Сontact: %+v\n", contact)
 	}
 
-	cacf := amoCrmContactAddCustomFields{
-		ID: 408903,
+	e := amoCrmContact{
+		Add: []amoCrmContactAdd{
+			{
+				Name:              "Новый",
+				CreatedAt:         contact.CreatedAt,
+				ResponsibleUserID: contact.Responsible,
+				CustomFields: []amoCrmContactAddCustomFields{
+					{
+						ID: 408903,
+						Values: []amoCrmContactAddCustomFieldsValues{
+							{
+								Value: contact.PhoneNumber,
+								Enum:  "WORK",
+							},
+						},
+					},
+				},
+			},
+		},
 	}
-	cacf.Values = append(cacf.Values, amoCrmContactAddCustomFieldsValues{
-		Value: contact.PhoneNumber,
-		Enum:  "WORK",
-	})
-	ca := amoCrmContactAdd{
-		Name:              "Новый",
-		CreatedAt:         contact.CreatedAt,
-		ResponsibleUserID: contact.Responsible,
-	}
-	ca.CustomFields = append(ca.CustomFields, cacf)
-	e := amoCrmContact{}
-	e.Add = append(e.Add, ca)
 
 	body, err := json.Marshal(e)
 	if err != nil {
