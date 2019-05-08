@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"log"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -80,7 +81,11 @@ func getCallsFromDB() []amoCrmCallsAdd {
 			log.Fatal(err)
 		}
 		if recordingfile != "" {
-			record_link = config.AmoCRM.RecordUrl + "/" + recordingfile
+			if finfo, err := os.Stat(config.AmoCRM.RecordPath + "/" + recordingfile); err == nil {
+				if finfo.Size() > 128 {
+					record_link = config.AmoCRM.RecordUrl + "/" + recordingfile
+				}
+			}
 		}
 		if responsible != "" {
 			if user, ok := config.AmoCRM.NumberNoUser[responsible]; ok {

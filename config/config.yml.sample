@@ -7,6 +7,8 @@ amocrm:
     base_url: https://mycompany.amocrm.ru
     # Откуда тянем записи
     record_url: https://192.168.0.80/monitor
+    # Путь к записям
+    record_path: /var/spool/asterisk/monitor
     # Логин пользователя. В качестве логина в системе используется e-mail
     login: sovsem@pesem.net
     # Ключ пользователя, который можно получить на странице редактирования профиля пользователя

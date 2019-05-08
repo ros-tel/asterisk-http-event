@@ -22,6 +22,8 @@ type (
 		BaseUrl   string `yaml:"base_url"`
 		RecordUrl string `yaml:"record_url"`
 
+		RecordPath string `yaml:"record_path"`
+
 		CreateContact bool `yaml:"create_contact"`
 		CreateLead    bool `yaml:"create_lead"`
 
