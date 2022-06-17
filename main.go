@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"time"
 
 	"github.com/zaf/agi"
 	"gopkg.in/yaml.v2"
@@ -61,24 +60,13 @@ func main() {
 
 	getConfig(*config_file)
 
-	dbConnect(config.Database)
-
-	api := &apiClient{
-		c: &http.Client{
-			Timeout: 20 * time.Second,
-			Transport: &http.Transport{
-				IdleConnTimeout:     30 * time.Second,
-				DisableKeepAlives:   false,
-				MaxIdleConnsPerHost: 5,
-			},
-		},
+	if *debug {
+		log.Printf("[DEBUG] config: %+v", config)
 	}
 
-	go processAuth(api)
+	dbConnect(config.Database)
 
-	go reqBackground(api)
-
-	go processCalls(api)
+	AmoServe(config.AmoCRM)
 
 	fagiserv, err := net.Listen("tcp", config.FastAgiListen.Host+":"+config.FastAgiListen.Port)
 	if fagiserv == nil {

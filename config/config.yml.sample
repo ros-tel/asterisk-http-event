@@ -3,19 +3,25 @@ fast_agi_listen:
     port: '4580'
 
 amocrm:
+    # ID интеграции
+    client_id: 4c492641-e546-45d6-93da-e64ec27fadf1
+    # Секретный ключ
+    client_secret: jVPRXvqf2gpH9vX1Ey3E1Npm0ue
+    # Код авторизации
+    auth_code: H9vX1Ey3E1Npm0ue
     # Ваш аккаунт - поддомен
-    base_url: https://mycompany.amocrm.ru
+    domain: mycompany.amocrm.ru
+    # Адрес перенаправления после авторизации
+    redirect_url: https://192.168.0.80/auth
     # Откуда тянем записи
     record_url: https://192.168.0.80/monitor
     # Путь к записям
     record_path: /var/spool/asterisk/monitor
-    # Логин пользователя. В качестве логина в системе используется e-mail
-    login: sovsem@pesem.net
-    # Ключ пользователя, который можно получить на странице редактирования профиля пользователя
-    api_key: z2Ks2rMSOVoFZV3l8gbgdVwoVADntScngwCbXFlG
-    # Создавать контакт
-    create_contact: true
-    # Создавать сделку (должно быть активно создание контакта)
+    # Создавать контакт при входящих звонках
+    create_contact_inbound: true
+    # Создавать контакт при исходящих звонках
+    create_contact_outbound: true
+    # Создавать сделку (должно быть активно создание контакта, хотя бы одного типа)
     create_lead: true
     # Соответствие внутреннего номера и идентификатора пользователя в AmoCRM
     number_to_user:

@@ -1,3 +1,7 @@
 go.sum
 
+config/config.yml
+
 /asterisk-http-event
+
+/amo.tokens
